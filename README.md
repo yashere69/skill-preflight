@@ -34,7 +34,8 @@ What it does do is the boring, reliable part that a reviewer needs before readin
 | **Context budget**: tokens of name+description (loaded every session), body vs the spec's ~5,000 guidance, SKILL.md lines vs 500, missing or deeply nested references | Every installed skill taxes every conversation |
 | **Capability manifest**: network, shell, env, credential paths and home-directory writes seen in `scripts/`, compared with `allowed-tools` | Tells you where to look first |
 | **Instruction flags**: pipe-to-shell, "ignore previous instructions", hide-from-user, send-to-URL, read-secrets, paste-site links, long base64 | The risky line in a skill is often plain English |
-| **Lock and diff**: hashes, description, allowed-tools, capabilities and URLs per skill | A trusted skill can change on update |
+| **Symlinks**: any link leaving the skill directory is an error, and links are never followed | A `references/notes.md` that points at `~/.ssh/id_rsa` gets read by whatever loads the skill |
+| **Lock and diff**: hashes, description, allowed-tools, capabilities, URLs and link targets per skill | A trusted skill can change on update |
 
 Every run ends with "No findings does not mean safe."
 
@@ -50,6 +51,23 @@ your skills. `skill-preflight diff` then ranks what changed:
 - **low**: small description edit, docs changed, file removed
 
 `diff` exits 1 on any high change, so it works as a CI gate on a skills repo.
+
+## In CI
+
+`--format json` is for scripts. `--format sarif` writes SARIF 2.1.0 (it validates against
+the OASIS schema), so findings show up as annotations on the pull request and in the
+repository's Security tab:
+
+```yaml
+- uses: yashere69/skill-preflight@v0.2.0
+  with:
+    path: skills
+    sarif: skill-preflight.sarif
+- uses: github/codeql-action/upload-sarif@v3
+  if: always()
+  with:
+    sarif_file: skill-preflight.sarif
+```
 
 The description gets special treatment because it's loaded for every session and decides
 when the skill runs. Rewriting "Use when the user shares a CSV" as "Use for every task,

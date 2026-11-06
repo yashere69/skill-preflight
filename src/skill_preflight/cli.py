@@ -6,7 +6,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import __version__, budget, capabilities, conformance, instructions, lock
+from . import __version__, budget, capabilities, conformance, instructions, lock, output
 from .model import Finding, find_skills, load
 
 LEVEL_ORDER = {"error": 0, "warning": 1, "info": 2}
@@ -29,14 +29,21 @@ def _bar(n: int, limit: int, width: int = 24) -> str:
     return "#" * filled + "." * (width - filled)
 
 
-def cmd_check(paths: list[Path], strict: bool) -> int:
+def cmd_check(paths: list[Path], strict: bool, fmt: str = "text") -> int:
     worst = 2
     skills = [s for p in paths for s in find_skills(p)]
     if not skills:
         print("no skills found (looked for SKILL.md)", file=sys.stderr)
         return 2
-    for path in skills:
-        findings, b = check_skill(path)
+    results = [(path, *check_skill(path)) for path in skills]
+    for _, findings, _ in results:
+        for f in findings:
+            worst = min(worst, LEVEL_ORDER[f.level])
+    exit_code = 1 if worst == 0 or (strict and worst == 1) else 0
+    if fmt != "text":
+        print(output.to_json(results) if fmt == "json" else output.to_sarif(results))
+        return exit_code
+    for path, findings, b in results:
         print(f"{path.name}")
         print(
             f"  body    [{_bar(b.body_tokens, 5000)}] ~{b.body_tokens} / 5000 tokens, "
@@ -45,15 +52,12 @@ def cmd_check(paths: list[Path], strict: bool) -> int:
         print(f"  always  ~{b.metadata_tokens} tokens of name+description in every session")
         for f in findings:
             print(f"  [{MARK[f.level]}] {f.rule:<20} {f.message}  ({f.where})")
-            worst = min(worst, LEVEL_ORDER[f.level])
         if not findings:
             print("  no findings")
         print()
     print("No findings does not mean safe. This tool checks structure and declared behaviour;")
     print("it cannot tell what a script or an instruction is for.")
-    if worst == 0 or (strict and worst == 1):
-        return 1
-    return 0
+    return exit_code
 
 
 def cmd_lock(paths: list[Path], lockfile: Path) -> int:
@@ -94,13 +98,14 @@ def main(argv: list[str] | None = None) -> int:
     c = sub.add_parser("check", help="check one skill or a directory of skills")
     c.add_argument("paths", nargs="+", type=Path)
     c.add_argument("--strict", action="store_true", help="exit 1 on warnings too")
+    c.add_argument("--format", choices=["text", "json", "sarif"], default="text")
     for name, helptext in (("lock", "record hashes and manifests"), ("diff", "compare to lock")):
         s = sub.add_parser(name, help=helptext)
         s.add_argument("paths", nargs="+", type=Path)
         s.add_argument("--lockfile", type=Path, default=Path("skills.lock"))
     args = ap.parse_args(argv)
     if args.cmd == "check":
-        return cmd_check(args.paths, args.strict)
+        return cmd_check(args.paths, args.strict, args.format)
     if args.cmd == "lock":
         return cmd_lock(args.paths, args.lockfile)
     try:
