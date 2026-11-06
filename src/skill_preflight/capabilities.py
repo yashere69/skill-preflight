@@ -16,17 +16,37 @@ SCRIPT_EXT = (".py", ".sh", ".bash", ".js", ".mjs", ".ts", ".rb", ".ps1")
 
 PATTERNS: dict[str, list[str]] = {
     "network": [
-        r"\bcurl\b", r"\bwget\b", r"\brequests\.", r"\burllib\b", r"\bhttpx\b", r"\bfetch\(",
-        r"\baxios\b", r"Invoke-WebRequest", r"\bsocket\.", r"https?://",
+        r"\bcurl\b",
+        r"\bwget\b",
+        r"\brequests\.",
+        r"\burllib\b",
+        r"\bhttpx\b",
+        r"\bfetch\(",
+        r"\baxios\b",
+        r"Invoke-WebRequest",
+        r"\bsocket\.",
+        r"https?://",
     ],
     "shell": [
-        r"\bsubprocess\b", r"\bos\.system\b", r"\bos\.popen\b", r"\bchild_process\b",
-        r"\bexecSync\b", r"\beval\(", r"\bexec\(", r"\bbash -c\b",
+        r"\bsubprocess\b",
+        r"\bos\.system\b",
+        r"\bos\.popen\b",
+        r"\bchild_process\b",
+        r"\bexecSync\b",
+        r"\beval\(",
+        r"\bexec\(",
+        r"\bbash -c\b",
     ],
     "env": [r"\bos\.environ\b", r"\bgetenv\(", r"\bprocess\.env\b", r"\$\{?[A-Z_]{3,}\}?"],
     "credentials": [
-        r"\.ssh/", r"\.aws/", r"id_rsa", r"\.netrc", r"\.npmrc", r"\.git-credentials",
-        r"keychain", r"\bAPI_KEY\b", r"\bTOKEN\b", r"\bSECRET\b",
+        r"\.ssh/",
+        r"\.aws/",
+        r"id_rsa",
+        r"\.netrc",
+        r"\.npmrc",
+        r"\.git-credentials",
+        r"keychain",
+        r"[A-Z_]*(API_KEY|TOKEN|SECRET|PASSWORD)\b",
     ],
     "writes-outside": [r"~/", r"\$HOME", r"/etc/", r"expanduser\(", r"Path\.home\("],
 }
@@ -59,8 +79,10 @@ def check(skill: Skill) -> Iterator[Finding]:
         where = ", ".join(files)
         if declared and cap in DECLARES and not DECLARES[cap].search(declared):
             yield Finding(
-                f"cap.{cap}", "warning",
-                f"scripts use {cap} but allowed-tools doesn't declare it", where,
+                f"cap.{cap}",
+                "warning",
+                f"scripts use {cap} but allowed-tools doesn't declare it",
+                where,
             )
         else:
             level = "warning" if cap in {"credentials", "writes-outside"} else "info"

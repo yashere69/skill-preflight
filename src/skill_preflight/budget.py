@@ -45,7 +45,8 @@ def check(skill: Skill) -> Iterator[Finding]:
     b = measure(skill)
     if b.body_tokens > 5000:
         yield Finding(
-            "budget.body", "warning",
+            "budget.body",
+            "warning",
             f"body is ~{b.body_tokens} tokens; the spec recommends under 5,000 "
             "(move detail into references/)",
         )
@@ -53,7 +54,8 @@ def check(skill: Skill) -> Iterator[Finding]:
         yield Finding("budget.lines", "warning", f"SKILL.md is {b.body_lines} lines (max 500)")
     if b.metadata_tokens > 300:
         yield Finding(
-            "budget.metadata", "info",
+            "budget.metadata",
+            "info",
             f"name+description is ~{b.metadata_tokens} tokens, loaded for every task",
         )
     for m in _LINK.finditer(skill.body):
@@ -61,8 +63,9 @@ def check(skill: Skill) -> Iterator[Finding]:
         if ref.startswith(("http://", "https://", "mailto:")):
             continue
         ref = ref.removeprefix("./")
-        if ref not in skill.files and not any(f.startswith(ref.rstrip("/") + "/") for f in
-                                              skill.files):
+        if ref not in skill.files and not any(
+            f.startswith(ref.rstrip("/") + "/") for f in skill.files
+        ):
             yield Finding("refs.missing", "error", f"references {ref!r}, which isn't in the skill")
         elif ref.count("/") > 1:
             yield Finding(
