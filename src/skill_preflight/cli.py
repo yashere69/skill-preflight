@@ -81,8 +81,8 @@ def cmd_diff(paths: list[Path], lockfile: Path) -> int:
             print(f"{skill.name}: {len(d.changes)} change(s), worst {d.worst}")
             for c in d.changes:
                 print(f"  [{c.level:<6}] {c.what}")
-                for line in c.detail.splitlines()[2:] if c.detail.startswith("---") else []:
-                    print(f"           {line[:110]}")
+                for line in c.detail.splitlines():
+                    print(f"           {line}")
             worst = min(worst, d.worst, key=rank.index)
     return 1 if worst == "high" else 0
 

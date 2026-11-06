@@ -76,11 +76,26 @@ def _new_words(old: str, new: str) -> set[str]:
     return _risky(new) - _risky(old)
 
 
+def _changed_part(old: str, new: str) -> str:
+    """Trim the shared start and end so the reviewer sees only what moved."""
+    a, b = old.split(" "), new.split(" ")
+    i = 0
+    while i < min(len(a), len(b)) and a[i] == b[i]:
+        i += 1
+    j = 0
+    while j < min(len(a), len(b)) - i and a[-1 - j] == b[-1 - j]:
+        j += 1
+    lead = "... " if i else ""
+    old_mid = " ".join(a[i : len(a) - j])
+    new_mid = " ".join(b[i : len(b) - j])
+    return f"- {lead}{old_mid}\n+ {lead}{new_mid}"
+
+
 def description_change(old: str, new: str) -> Change:
     words = _new_words(old, new)
     urls = set(_URL.findall(new)) - set(_URL.findall(old))
     ratio = difflib.SequenceMatcher(None, old, new).ratio()
-    detail = "\n".join(difflib.unified_diff([old], [new], "locked", "current", lineterm="", n=0))
+    detail = _changed_part(old, new)
     if urls:
         return Change("high", f"description now links {sorted(urls)}", detail)
     if words:
