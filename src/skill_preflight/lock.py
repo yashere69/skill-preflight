@@ -35,6 +35,7 @@ def entry(skill: Skill) -> dict:
         "files": {p: sha256(d) for p, d in skill.files.items()},
         "capabilities": sorted(capabilities.observed(skill)),
         "urls": sorted(set(_URL.findall(skill.raw))),
+        "links": dict(sorted(skill.links.items())),
     }
 
 
@@ -120,6 +121,10 @@ def diff(locked: dict, current: Skill) -> SkillDiff:
         )
     for cap in sorted(set(now["capabilities"]) - set(locked["capabilities"])):
         d.changes.append(Change("high", f"new capability: {cap}"))
+    old_links = locked.get("links", {})
+    for rel, target in sorted(now["links"].items()):
+        if old_links.get(rel) != target:
+            d.changes.append(Change("high", f"symlink added or retargeted: {rel} -> {target}"))
     for url in sorted(set(now["urls"]) - set(locked["urls"])):
         d.changes.append(Change("high", f"new URL: {url}"))
     old_files, new_files = locked["files"], now["files"]

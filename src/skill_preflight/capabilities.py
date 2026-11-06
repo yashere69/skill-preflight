@@ -73,6 +73,13 @@ def observed(skill: Skill) -> dict[str, list[str]]:
 
 
 def check(skill: Skill) -> Iterator[Finding]:
+    for rel, target in sorted(skill.links.items()):
+        if rel in skill.escaping_links:
+            yield Finding(
+                "link.escapes", "error", f"symlink points outside the skill: {rel} -> {target}", rel
+            )
+        else:
+            yield Finding("link.internal", "info", f"symlink {rel} -> {target}", rel)
     obs = observed(skill)
     declared = str((skill.frontmatter or {}).get("allowed-tools") or "")
     for cap, files in sorted(obs.items()):
