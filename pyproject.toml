@@ -1,0 +1,37 @@
+[project]
+name = "skill-preflight"
+version = "0.1.0"
+description = "Pre-install checks for Agent Skills: spec conformance, context budget, capability manifest and update diffs."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Yash Sharma" }]
+requires-python = ">=3.11"
+dependencies = ["pyyaml>=6"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.10", "types-PyYAML"]
+
+[project.scripts]
+skill-preflight = "skill_preflight.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["tests/fixtures"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_ignores = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
