@@ -18,7 +18,7 @@ PATTERNS: dict[str, list[str]] = {
     "network": [
         r"\bcurl\b",
         r"\bwget\b",
-        r"\brequests\.",
+        r"\brequests\b",
         r"\burllib\b",
         r"\bhttpx\b",
         r"\bfetch\(",
