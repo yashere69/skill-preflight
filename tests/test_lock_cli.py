@@ -89,3 +89,10 @@ def test_removed_skill_is_reported(tmp_path, capsys):
     shutil.rmtree(skills / "release-notes")
     assert main(["diff", str(skills), "--lockfile", str(lf)]) == 0
     assert "release-notes: in" in capsys.readouterr().out
+
+
+def test_damaged_lockfile_names_the_file(tmp_path, capsys):
+    lf = tmp_path / "skills.lock"
+    lf.write_text("{not json", encoding="utf-8")
+    assert main(["diff", str(EXAMPLES), "--lockfile", str(lf)]) == 2
+    assert f"{lf}: not a skills.lock file" in capsys.readouterr().err

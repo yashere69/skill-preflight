@@ -45,9 +45,13 @@ def write(path: Path, skills: list[Skill]) -> None:
 
 
 def read(path: Path) -> dict:
-    data = json.loads(path.read_text(encoding="utf-8"))
-    if data.get("version") != LOCK_VERSION:
-        raise ValueError(f"{path}: unsupported lock version {data.get('version')}")
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        raise ValueError(f"{path}: not a skills.lock file (invalid JSON at line {e.lineno})") from e
+    if not isinstance(data, dict) or data.get("version") != LOCK_VERSION:
+        version = data.get("version") if isinstance(data, dict) else None
+        raise ValueError(f"{path}: unsupported lock version {version}")
     return data["skills"]
 
 
