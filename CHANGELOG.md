@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.1
 
 - Broken frontmatter is reported on one line with the SKILL.md line number, instead of
   PyYAML's multi-line dump counted from the start of the frontmatter.

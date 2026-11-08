@@ -61,7 +61,7 @@ the OASIS schema), so findings show up as annotations on the pull request and in
 repository's Security tab:
 
 ```yaml
-- uses: yashere69/skill-preflight@v0.3.0
+- uses: yashere69/skill-preflight@v0.3.1
   with:
     path: skills
     sarif: skill-preflight.sarif
