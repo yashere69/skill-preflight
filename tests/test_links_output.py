@@ -10,7 +10,7 @@ from .conftest import EXAMPLES
 
 def test_symlink_leaving_the_skill_is_an_error_and_never_read(make_skill, tmp_path):
     secret = tmp_path / "secret.txt"
-    secret.write_text("TOP SECRET")
+    secret.write_text("TOP SECRET", encoding="utf-8")
     root = make_skill()
     os.symlink(secret, root / "notes.md")
     os.symlink("SKILL.md", root / "alias.md")
@@ -32,7 +32,8 @@ def test_relinking_is_a_high_change(make_skill, tmp_path):
 
 
 def test_json_output(capsys):
-    assert main(["check", str(EXAMPLES / "release-notes"), "--format", "json"]) == 0
+    # piping a download into a shell is an error since 0.3, so this exits 1
+    assert main(["check", str(EXAMPLES / "release-notes"), "--format", "json"]) == 1
     data = json.loads(capsys.readouterr().out)
     assert data[0]["skill"] == "release-notes"
     assert {f["rule"] for f in data[0]["findings"]} >= {"instr.pipe-to-shell", "cap.network"}
@@ -46,9 +47,7 @@ def test_sarif_output_shape(capsys):
     rule_ids = {r["id"] for r in run["tool"]["driver"]["rules"]}
     assert {r["ruleId"] for r in run["results"]} == rule_ids
     pipe = next(
-        r
-        for r in run["results"]
-        if r["ruleId"] == "instr.pipe-to-shell" and r["level"] == "warning"
+        r for r in run["results"] if r["ruleId"] == "instr.pipe-to-shell" and r["level"] == "error"
     )
     loc = pipe["locations"][0]["physicalLocation"]
     assert loc["artifactLocation"]["uri"].endswith("release-notes/SKILL.md")

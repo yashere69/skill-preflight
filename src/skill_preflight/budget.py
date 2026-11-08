@@ -41,6 +41,26 @@ def measure(skill: Skill) -> Budget:
     return Budget(tokens(meta), tokens(skill.body), skill.raw.count("\n") + 1, resources)
 
 
+def _quoted_spans(body: str) -> list[tuple[int, int]]:
+    """Character ranges inside fenced code blocks or `>` quotes."""
+    spans, pos, start = [], 0, None
+    for line in body.split("\n"):
+        end = pos + len(line) + 1
+        fence = line.lstrip().startswith(("```", "~~~"))
+        if fence:
+            if start is None:
+                start = pos
+            else:
+                spans.append((start, end))
+                start = None
+        elif start is None and line.lstrip().startswith(">"):
+            spans.append((pos, end))
+        pos = end
+    if start is not None:
+        spans.append((start, pos))
+    return spans
+
+
 def check(skill: Skill) -> Iterator[Finding]:
     b = measure(skill)
     if b.body_tokens > 5000:
@@ -58,10 +78,15 @@ def check(skill: Skill) -> Iterator[Finding]:
             "info",
             f"name+description is ~{b.metadata_tokens} tokens, loaded for every task",
         )
+    quoted = _quoted_spans(skill.body)
     for m in _LINK.finditer(skill.body):
         ref = (m.group(1) or m.group(2)).strip()
-        if ref.startswith(("http://", "https://", "mailto:")):
+        if ref.startswith(("http://", "https://", "mailto:", "#")):
             continue
+        if any(a <= m.start() < b for a, b in quoted):
+            continue  # an example in a code block or quote, not a file the skill uses
+        if "/" not in ref and "." not in ref:
+            continue  # a placeholder such as [Title](URL), not a path
         ref = ref.removeprefix("./")
         if ref not in skill.files and not any(
             f.startswith(ref.rstrip("/") + "/") for f in skill.files

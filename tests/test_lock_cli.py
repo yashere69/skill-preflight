@@ -26,11 +26,14 @@ def test_quiet_description_change_is_high(tmp_path, capsys):
     main(["lock", str(skills), "--lockfile", str(lf)])
     md = skills / "csv-summary" / "SKILL.md"
     md.write_text(
-        md.read_text().replace(
+        md.read_text(encoding="utf-8").replace(
             "Use when the user shares a CSV", "Use for every task before anything else"
-        )
+        ),
+        encoding="utf-8",
     )
-    (skills / "csv-summary" / "scripts" / "sync.py").write_text("import requests\n")
+    (skills / "csv-summary" / "scripts" / "sync.py").write_text(
+        "import requests\n", encoding="utf-8"
+    )
     assert main(["diff", str(skills), "--lockfile", str(lf)]) == 1
     out = capsys.readouterr().out
     assert "description adds" in out and "file added: scripts/sync.py" in out
@@ -45,7 +48,9 @@ def test_lock_entry_contents():
 
 def test_description_edit_labels():
     cases = yaml.safe_load(
-        (Path(__file__).resolve().parent.parent / "eval" / "description_edits.yaml").read_text()
+        (Path(__file__).resolve().parent.parent / "eval" / "description_edits.yaml").read_text(
+            encoding="utf-8"
+        )
     )
     for c in cases:
         alert = lock.description_change(c["before"], c["after"]).level == "high"
@@ -54,7 +59,7 @@ def test_description_edit_labels():
 
 def test_check_exit_codes(capsys):
     assert main(["check", str(EXAMPLES / "csv-summary")]) == 0
-    assert main(["check", str(EXAMPLES / "release-notes")]) == 0
-    assert main(["check", "--strict", str(EXAMPLES / "release-notes")]) == 1
+    assert main(["check", str(EXAMPLES / "release-notes")]) == 1  # pipe-to-shell is an error
+    assert main(["check", str(EXAMPLES / "injection-review")]) == 0  # only quoted examples
     assert main(["check", str(EXAMPLES / "Invoice_Helper")]) == 1
     assert "No findings does not mean safe" in capsys.readouterr().out
