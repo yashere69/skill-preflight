@@ -64,3 +64,11 @@ def test_missing_or_broken_frontmatter(make_skill, tmp_path):
     empty = tmp_path / "empty"
     empty.mkdir()
     assert rules(empty) == ["spec.skill-md"]
+
+
+def test_broken_frontmatter_names_the_file_line_on_one_line(make_skill):
+    root = make_skill(frontmatter="name: demo-skill\ndescription: [unclosed\n")
+    msgs = [f.message for f in check(load(root)) if f.rule == "spec.frontmatter"]
+    assert len(msgs) == 1
+    assert "at line 3" in msgs[0]  # line 1 is ---, the broken line is the file's third
+    assert "\n" not in msgs[0] and "<unicode string>" not in msgs[0]

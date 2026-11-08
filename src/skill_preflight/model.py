@@ -61,7 +61,12 @@ def load(root: Path) -> Skill:
             if fm is None:
                 err = "frontmatter is not a mapping"
         except yaml.YAMLError as e:
-            err = f"frontmatter is not valid YAML: {e}"
+            # PyYAML counts lines from the start of the frontmatter, which is line 2 of
+            # SKILL.md; report the file's line and drop the multi-line context dump.
+            mark = getattr(e, "problem_mark", None)
+            at = f" at line {mark.line + 2}" if mark else ""
+            why = getattr(e, "problem", None)
+            err = f"frontmatter is not valid YAML{at}" + (f": {why}" if why else "")
     files: dict[str, bytes] = {}
     links: dict[str, str] = {}
     escaping: list[str] = []

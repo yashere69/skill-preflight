@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Broken frontmatter is reported on one line with the SKILL.md line number, instead of
+  PyYAML's multi-line dump counted from the start of the frontmatter.
 - Output is UTF-8 even when redirected on Windows, where it used to follow the code page
   and fail on Devanagari text.
 - CI runs the tests on Windows and macOS as well as Linux.
