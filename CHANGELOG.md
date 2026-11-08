@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- `diff` with no lockfile says how to create one instead of printing a raw file error.
+- `lock` refuses two skills with the same name. The lockfile is keyed by name, so one
+  would silently have hidden the other.
+- `diff` lists skills that are in the lockfile but no longer found.
+
 ## 0.3.0
 
 Tested on Anthropic's public skills and Snyk's ToxicSkills demos (results/real-skills.md).

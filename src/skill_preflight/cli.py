@@ -62,18 +62,37 @@ def cmd_check(paths: list[Path], strict: bool, fmt: str = "text") -> int:
 
 def cmd_lock(paths: list[Path], lockfile: Path) -> int:
     skills = [load(s) for p in paths for s in find_skills(p)]
+    seen: dict[str, Path] = {}
+    for s in skills:
+        if s.name in seen:
+            print(
+                f"error: two skills are named {s.name!r} ({seen[s.name]} and {s.root}); "
+                "the lockfile keys skills by name, so one would hide the other",
+                file=sys.stderr,
+            )
+            return 2
+        seen[s.name] = s.root
     lock.write(lockfile, skills)
     print(f"locked {len(skills)} skill(s) in {lockfile}")
     return 0
 
 
 def cmd_diff(paths: list[Path], lockfile: Path) -> int:
+    if not lockfile.exists():
+        print(
+            f"error: no lockfile at {lockfile}. Run `skill-preflight lock "
+            f"{' '.join(str(p) for p in paths)}` first, or pass --lockfile.",
+            file=sys.stderr,
+        )
+        return 2
     locked = lock.read(lockfile)
     worst = "none"
     rank = ["high", "medium", "low", "none"]
+    found: set[str] = set()
     for p in paths:
         for path in find_skills(p):
             skill = load(path)
+            found.add(skill.name)
             if skill.name not in locked:
                 print(f"{skill.name}: not in {lockfile} (new skill)")
                 worst = "high"
@@ -88,6 +107,8 @@ def cmd_diff(paths: list[Path], lockfile: Path) -> int:
                 for line in c.detail.splitlines():
                     print(f"           {line}")
             worst = min(worst, d.worst, key=rank.index)
+    for name in sorted(set(locked) - found):
+        print(f"{name}: in {lockfile} but not found (removed, or not under these paths)")
     return 1 if worst == "high" else 0
 
 
@@ -102,7 +123,12 @@ def main(argv: list[str] | None = None) -> int:
     for name, helptext in (("lock", "record hashes and manifests"), ("diff", "compare to lock")):
         s = sub.add_parser(name, help=helptext)
         s.add_argument("paths", nargs="+", type=Path)
-        s.add_argument("--lockfile", type=Path, default=Path("skills.lock"))
+        s.add_argument(
+            "--lockfile",
+            type=Path,
+            default=Path("skills.lock"),
+            help="default: skills.lock in the current directory",
+        )
     args = ap.parse_args(argv)
     if args.cmd == "check":
         return cmd_check(args.paths, args.strict, args.format)
