@@ -148,4 +148,17 @@ Stable: the check/lock/diff commands, the lockfile format and the JSON and SARIF
 Experimental: the individual instruction rules and their severities, which will keep
 moving as they meet more real skills.
 
+## Development
+
+```bash
+pip install -e ".[dev]"
+ruff check . && ruff format --check . && mypy src && pytest
+python tools/eval_diff.py            # regenerates results/description-edits.md
+```
+
+A new instruction rule needs two tests: one that it fires, and one on a line it must not
+fire on (quoted examples, docs describing the risky thing). Most false positives found so
+far came from the second kind. `tools/real_skills.py` reruns the real-skills report
+against fresh clones of the two repositories it names.
+
 MIT licensed.
