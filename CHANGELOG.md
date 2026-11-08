@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.3.0
+
+Tested on Anthropic's public skills and Snyk's ToxicSkills demos (results/real-skills.md).
+
+- Python scripts are read with `ast`: imports and calls count, comments and docstrings don't.
+  Other languages are matched after comments are stripped. Findings give file and line.
+- New rules: invisible Unicode tag characters (error, with the hidden text decoded),
+  bidirectional overrides, zero-width runs, `` !`cmd` `` load-time execution, uploads of
+  command output (error), request-capture hosts (error), more paste hosts.
+- `instr.pipe-to-shell` is now an error.
+- Fixed false positives seen on real skills: placeholder links like `[Title](URL)` and links
+  inside quotes or code blocks reported as missing files; "token-counting" read as reading
+  a token; credential paths in comments and docstrings; `urllib2` missed.
+
 ## 0.2.0
 
 - Symlinks are never followed; a link leaving the skill is an error, and retargeting one is a high-risk change in `diff`

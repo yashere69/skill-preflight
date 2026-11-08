@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def main() -> None:
-    cases = yaml.safe_load((ROOT / "eval" / "description_edits.yaml").read_text())
+    cases = yaml.safe_load((ROOT / "eval" / "description_edits.yaml").read_text(encoding="utf-8"))
     rows, tp, fp, fn, tn = [], 0, 0, 0, 0
     for c in cases:
         change = description_change(c["before"], c["after"])

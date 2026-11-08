@@ -1,6 +1,6 @@
 [project]
 name = "skill-preflight"
-version = "0.2.0"
+version = "0.3.0"
 description = "Pre-install checks for Agent Skills: spec conformance, context budget, capability manifest and update diffs."
 readme = "README.md"
 license = { text = "MIT" }

@@ -57,7 +57,7 @@ def test_description_limits(make_skill):
 def test_missing_or_broken_frontmatter(make_skill, tmp_path):
     root = tmp_path / "no-fm"
     root.mkdir()
-    (root / "SKILL.md").write_text("# just markdown\n")
+    (root / "SKILL.md").write_text("# just markdown\n", encoding="utf-8")
     assert rules(root) == ["spec.frontmatter"]
     bad = make_skill(frontmatter="name: [unclosed\n")
     assert rules(bad) == ["spec.frontmatter"]
