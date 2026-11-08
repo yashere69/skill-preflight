@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Output is UTF-8 even when redirected on Windows, where it used to follow the code page
+  and fail on Devanagari text.
+- CI runs the tests on Windows and macOS as well as Linux.
 - `diff` with no lockfile says how to create one instead of printing a raw file error.
 - `lock` refuses two skills with the same name. The lockfile is keyed by name, so one
   would silently have hidden the other.
